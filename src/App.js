@@ -2,13 +2,12 @@ import './App.css';
 import React, { useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { useQuery } from 'react-query';
-import axios from 'axios';
+import axios from './utilitis/axios/axios';
 import DayPickerInput from 'react-day-picker/DayPickerInput';
 import ToggleButton from '@material-ui/lab/ToggleButton';
 import 'react-day-picker/lib/style.css';
 
 function App() {
-	// const classes = useStyles();
 	const [selectedDate, setselectedDate] = useState(new Date());
 	const [prevDateData, setPrevDateData] = useState(null);
 	const [selected, setSelected] = React.useState(false);
@@ -16,7 +15,7 @@ function App() {
 	const { isFetching, error, data } = useQuery(
 		[('dateData', selectedDate)],
 		async () => {
-			const { data } = await axios.get(`http://localhost:5000/crypto-data/${selectedDate}`);
+			const { data } = await axios.get(`crypto-data/${selectedDate}`);
 			setPrevDateData(data);
 			return data;
 		},
@@ -55,7 +54,7 @@ function App() {
 				<div className='chart_container'>
 					{' '}
 					<LineChart
-						width={700}
+						width={600}
 						height={300}
 						data={isFetching ? prevDateData : data}
 						margin={{

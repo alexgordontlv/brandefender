@@ -17,14 +17,23 @@ app.use(cors());
 
 const fetchNewData = async (currentDate) => {
 	const { data } = await axios.get(`https://www.alphavantage.co/query?function=DIGITAL_CURRENCY_DAILY&symbol=BTC&market=CNY&apikey=${alphaApikey}`);
-	const currentCurrency = data['Time Series (Digital Currency Daily)'][currentDate];
-	return currentCurrency;
+	const currentCurrency = data['Time Series (Digital Currency Daily)']?.currentDate;
+	if (currentCurrency) return currentCurrency;
+	return null;
+};
+
+const fetchCurrentILSCurrency = async () => {
+	const { data } = await axios.get('https://api.fastforex.io/fetch-one?from=USD&to=ILS&api_key=add3dd4364-0696f3064b-qumozl');
+	return data;
 };
 
 (async () => {
+	const { result } = await fetchCurrentILSCurrency();
+	console.log(result);
+	currentNisAmount = result.ILS;
+	console.log(currentNisAmount);
 	app.get('/crypto-data/:requestDate', async (req, res) => {
 		const { requestDate } = req.params;
-
 		if (!moment(new Date(requestDate), 'YYYY-MM-DD').isValid()) {
 			return res.status(400).send({ message: 'bad request date' });
 		}
@@ -45,7 +54,7 @@ const fetchNewData = async (currentDate) => {
 					dataMap.push({
 						state: key.split(' ')[1],
 						valueUSD: value,
-						valueNIS: (currentNisAmount * value).toString(),
+						valueNIS: (currentNisAmount * value).toFixed(2).toString(),
 					});
 				}
 			}
