@@ -11,20 +11,17 @@ const cryptoData = require('./cryptodata/cryptodata');
 const dbURI = process.env.MONGO_DB_CREDENTIALS;
 const PORT = process.env.PORT || 5000;
 const alphaApikey = process.env.ALPHA_API_KEY;
-let counter = 1;
+let currentNisAmount = 3.9;
+
+app.use(cors());
 
 const fetchNewData = async (currentDate) => {
-	console.log(counter++);
 	const { data } = await axios.get(`https://www.alphavantage.co/query?function=DIGITAL_CURRENCY_DAILY&symbol=BTC&market=CNY&apikey=${alphaApikey}`);
 	const currentCurrency = data['Time Series (Digital Currency Daily)'][currentDate];
 	return currentCurrency;
 };
 
 (async () => {
-	app.use(cors());
-	app.use(express.static(path.join(__dirname, '..', 'build')));
-	app.use(express.static('public'));
-
 	app.get('/crypto-data/:requestDate', async (req, res) => {
 		const { requestDate } = req.params;
 
@@ -36,19 +33,27 @@ const fetchNewData = async (currentDate) => {
 		console.log(formatedDate);
 
 		if (!cryptoData[formatedDate]) {
-			const res = await fetchNewData(formatedDate);
-			cryptoData[formatedDate] = res;
+			const response = await fetchNewData(formatedDate);
+			if (!response) return res.status(400).send({ message: 'no records for this date' });
+
+			cryptoData[formatedDate] = response;
 		}
 		try {
+			const dataMap = [];
+			for (let [key, value] of Object.entries(cryptoData[formatedDate])) {
+				if (key.includes('USD') && !key.includes('market')) {
+					dataMap.push({
+						state: key.split(' ')[1],
+						valueUSD: value,
+						valueNIS: (currentNisAmount * value).toString(),
+					});
+				}
+			}
 			// const foundDataCenter = await DataCenter.findOne({ centerId });
-			return res.status(200).send(cryptoData[formatedDate]);
+			return res.status(200).send(dataMap);
 		} catch (error) {
 			return res.status(500).send({ message: error });
 		}
-	});
-
-	app.use((req, res) => {
-		res.sendFile(path.join(__dirname, '..', 'build', 'index.html'));
 	});
 
 	app.listen(PORT, () => {

@@ -16,7 +16,18 @@ body {
 	box-shadow: 6px 6px 20px rgba(122, 122, 122, 0.212);
 	justify-content: space-between;
 }
-
+.currency_container {
+	display: flex;
+	flex: 0.3;
+	flex-direction: column;
+	width: 100%;
+	justify-content: space-between;
+}
+.chart_container {
+	margin-left: 10px;
+	display: flex;
+	flex: 0.7;
+}
 .button {
 	border: none;
 	background: white;

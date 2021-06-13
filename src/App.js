@@ -4,62 +4,73 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts'
 import { useQuery } from 'react-query';
 import axios from 'axios';
 import DayPickerInput from 'react-day-picker/DayPickerInput';
+import ToggleButton from '@material-ui/lab/ToggleButton';
 import 'react-day-picker/lib/style.css';
 
 function App() {
-	const [date, setDate] = useState(new Date());
-	const [currentNisAmount, setCurrentNisAmount] = useState(3.97);
-	const [prevDate, setPrevDate] = useState(null);
-	const [currency, setCurrency] = useState('USD');
+	// const classes = useStyles();
+	const [selectedDate, setselectedDate] = useState(new Date());
+	const [prevDateData, setPrevDateData] = useState(null);
+	const [selected, setSelected] = React.useState(false);
 
-	const { isFetching, error, data } = useQuery([('dateData', date)], async () => {
-		const { data } = await axios.get(`http://localhost:5000/crypto-data/${date}`);
-		const dataMap = [];
-		for (let [key, value] of Object.entries(data)) {
-			if (key.includes('USD')) {
-				dataMap.push({
-					state: key.split(' ')[1],
-					valueUSD: value,
-					valueNIS: (currentNisAmount * value).toString(),
-				});
-			}
+	const { isFetching, error, data } = useQuery(
+		[('dateData', selectedDate)],
+		async () => {
+			const { data } = await axios.get(`http://localhost:5000/crypto-data/${selectedDate}`);
+			setPrevDateData(data);
+			return data;
+		},
+		{
+			refetch: false,
 		}
-		setPrevDate(dataMap);
-		return dataMap;
-	});
-
-	const handleDatePick = (dayPicked) => {
-		if (dayPicked > new Date()) {
-			alert('Please pick a valid date');
-			setDate(new Date());
-			return;
-		}
-		setDate(dayPicked);
-	};
+	);
 
 	if (error) return <div>error</div>;
-	console.log(data);
 	return (
 		<div className='app'>
 			<div className='container'>
-				<button onClick={() => setCurrency(currency === 'USD' ? 'NIS' : 'USD')}></button>
-				<DayPickerInput value={date.toDateString()} onDayChange={(day) => handleDatePick(day)} />{' '}
-				<LineChart
-					width={700}
-					height={300}
-					data={isFetching ? prevDate : data}
-					margin={{
-						top: 5,
-						right: 30,
-						left: 20,
-						bottom: 5,
-					}}>
-					<CartesianGrid strokeDasharray='3 3' />
-					<XAxis dataKey='state' />
-					<YAxis />
-					<Tooltip />
-					<Line type='monotone' dataKey={currency === 'USD' ? 'valueUSD' : 'valueNIS'} stroke='#82ca9d' />
-				</LineChart>
+				<div className='currency_container'>
+					<DayPickerInput value={selectedDate.toDateString()} onDayChange={(day) => setselectedDate(day)} />{' '}
+					<div>
+						<ToggleButton
+							value='check'
+							selected={selected}
+							style={{ color: selected && '#82ca9d' }}
+							onChange={() => {
+								setSelected(!selected);
+							}}>
+							USD
+						</ToggleButton>
+						<ToggleButton
+							value='check'
+							selected={!selected}
+							style={{ color: !selected && '#82ca9d' }}
+							onChange={() => {
+								setSelected(!selected);
+							}}>
+							ILS
+						</ToggleButton>
+					</div>
+				</div>
+				<div className='chart_container'>
+					{' '}
+					<LineChart
+						width={700}
+						height={300}
+						data={isFetching ? prevDateData : data}
+						margin={{
+							top: 5,
+							right: 30,
+							left: 20,
+							bottom: 5,
+						}}>
+						<CartesianGrid strokeDasharray='3 3' />
+						<XAxis dataKey='state' padding={{ left: 50, right: 50 }} />
+						<YAxis datakey='value' type='number' domain={['dataMin', 'dataMax']} />
+						<Tooltip />
+						<Line fill='black' strokeWidth={2} dataKey={selected ? 'valueUSD' : 'valueNIS'} stroke='#82ca9d' />
+					</LineChart>
+				</div>
 			</div>
 		</div>
 	);
