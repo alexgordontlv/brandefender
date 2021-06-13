@@ -8,7 +8,7 @@ import 'react-day-picker/lib/style.css';
 
 function App() {
 	const [date, setDate] = useState(new Date());
-	const [currentNisAmount, setCurrentNisAmount] = useState(3.17);
+	const [currentNisAmount, setCurrentNisAmount] = useState(3.97);
 	const [prevDate, setPrevDate] = useState(null);
 	const [currency, setCurrency] = useState('USD');
 
