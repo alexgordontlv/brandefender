@@ -16,8 +16,7 @@ app.use(cors());
 	app.get('/crypto-data/:requestDate', async (req, res) => {
 		const { requestDate } = req.params;
 		const formatedDate = moment(new Date(requestDate)).format('YYYY-MM-DD');
-
-		if (!formatedDate.isValid() || !cryptoData[formatedDate]) {
+		if (!moment(formatedDate).isValid() || !cryptoData[formatedDate]) {
 			return res.status(400).send(new Error());
 		}
 		const chartFormatData = convertDataToChart(cryptoData[formatedDate]);
